@@ -1626,9 +1626,9 @@ var salt = '4721283fee2db41e1f2fc50ea9f6d783'; // IMPORTANT: never change it, ot
 var config = {
     coinUnitPlaces: 7,
     coinSymbol: 'XFG',
-    coinName: 'Fandom GOLD',
-    coinUriPrefix: 'fandomgold:',
-    addressPrefix: 203478502
+    coinName: 'Fuego',
+    coinUriPrefix: 'fuego:',
+    addressPrefix: 1753191
 };
 var cnUtil = (function(initConfig) {
     //var config = $.extend({}, initConfig);

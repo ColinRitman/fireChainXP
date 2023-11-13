@@ -1,0 +1,116 @@
+<style>
+  h2 #transactionHash {
+    font-size: 20px;
+    color: #222;
+  }
+</style>
+
+<div class="container">
+  <div class="report-summary-header">
+    <div>
+      <h4 class="tx-white mg-b-3" tkey="netStats"><i class="fa fa-money fa-fw" aria-hidden="true"></i> <span
+          tkey="">CHECK BALANCE PROOF<span> </h4>
+    </div>
+  </div><!-- d-flex -->
+
+  <p tkey="bpDescription">Hereby you can check a signature proving that the owner of "address" holds at least this much,
+    optionally with a challenge string "message".</p>
+
+  <div class="well bs-component">
+    <form class="form-horizontal" id="check_reserve_form">
+      <fieldset>
+        <div class="col-md-12 pd-l-0 pd-r-0">
+          <div class="form-group">
+            <label for="public_address" tkey="bpAddress">Address</label>
+            <input class="form-control" placeholder="Fango address" id="public_address">
+          </div>
+        </div>
+
+        <div class="col-md-12 pd-l-0 pd-r-0">
+          <div class="form-group">
+            <label for="message" style="margin-bottom: 10px;" tkey="bpMessage">Message</label>
+            <textarea class="form-control" id="message" rows="2" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <div class="col-md-12 pd-l-0 pd-r-0">
+          <div class="form-group">
+            <label for="signature" style="margin-bottom: 10px;" tkey="bpSignature">Signature</label>
+            <textarea class="form-control" id="signature" rows="20" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <div class="col-md-12 pd-l-0 pd-r-0">
+          <div class="form-group">
+            <button class="btn btn-primary-outline" type="button" id="verify">
+              <span class="btnIcon fa fa-search"></span><span tkey="bpVerify">Verify</span>
+            </button>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+
+
+  <div class="panel panel-default" id="verification_result">
+    <div class="panel-heading">
+      <h3 class="panel-title" tkey="bpVerificationResult">Verification result</h3>
+    </div>
+    <div class="panel-body">
+      <p class="verified"><i class="fa fa-2x"></i> <span></span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  var signature = $("#signature");
+  var message = $("#message");
+  var address = $("#public_address");
+  var result_container = $("#verification_result");
+  result_container.hide();
+
+  currentPage = {
+    destroy: function () {
+      //if (xhrVerifyMessage) xhrVerifyMessage.abort();
+    },
+    init: function () {
+      var preloadData = GetURLParameter("preloadData");
+
+      if (preloadData) {
+        $.getJSON("funds.dat?" + makeid(20), function (resultFunds) {
+          if (preloadData == "ccx") {
+            $("#public_address").val(resultFunds.keys.ccx.address);
+            $("#signature").val(resultFunds.keys.ccx.signature);
+          } else if (preloadData == "wccx_eth") {
+            $("#public_address").val(resultFunds.keys.wccx_eth.address);
+            $("#signature").val(resultFunds.keys.wccx_eth.signature);
+          } else if (preloadData == "wccx_bsc") {
+            $("#public_address").val(resultFunds.keys.wccx_bsc.address);
+            $("#signature").val(resultFunds.keys.wccx_bsc.signature);
+          }
+        });
+
+        // always remove the possible URL parameters to not polute the URL 
+        window.history.pushState({}, document.title, "/" + "index.html#check_funds");
+      }
+    },
+    update: function () {
+    }
+  };
+
+
+  $("#verify").click(function () {
+    result_container.hide();
+    privateKeyType = $("[name=keyType]:checked").val();
+    if (!signature.val() || !address.val()) {
+      wrongParamAlert("Fill address and signature fields are mandatory.!", result_container);
+      return;
+    }
+    checkReserve(result_container, message.val(), address.val(), signature.val());
+  });
+
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+
+</script>

@@ -1,0 +1,271 @@
+<div class="card mg-t-20" id="nodeInfo">
+  <div class="card-header tx-medium bd-0 tx-white bg-primary-dark">
+    <h2 class="nodesTitleBar">
+      <div class="nodeTitleText">
+        <i class="fa fa-binoculars" aria-hidden="true"></i><span id="nodesTitle">Smart Nodes</span><span
+          id="nodesNumber"></span>
+      </div>
+      <div class="nodeTitleButton">
+        <button class="btn btn-primary-outline" type="button" id="choseNodeListType">
+          <span class="btnIcon fa fa-search"></span><span tkey="nodeListType" id="choseNodeListTypeText">All Nodes
+            Map</span>
+        </button>
+        <button class="btn btn-primary-outline" type="button" id="refreshNodes">
+          <span class="btnIcon fa fa-search"></span><span tkey="refreshNodes">Refresh list</span>
+        </button>
+      </div>
+    </h2>
+  </div>
+  <div class="card-body card-body-info">
+    <p class="card-subtitle tx-normal mg-b-15" id="nodesSubtitle">This is a list of Smart Nodes, that are currently in
+      use as remote nodes on the network</p>
+    <div class="row" id="remoteNodesRow">
+      <div class="col-lg-12">
+        <table id="nodesTable" class="table display responsive nowrap">
+          <thead>
+            <tr>
+              <th class="wd-15p ntNodeConnectURL">Connect URL</th>
+              <th class="wd-15p ntNodeName">Node Name</th>
+              <th class="wd-20p ntNodeLocation">Location</th>
+              <th class="wd-15p ntNodeStarted">Started</th>
+              <th class="wd-15p ntNodeStartedActual">Actual</th>
+              <th class="wd-10p ntNodeHeight">Height</th>
+              <th class="wd-10p ntNodeUptime">Uptime</th>
+              <th class="wd-10p ntGuardianVersion">G. Version</th>
+              <th class="wd-10p ntNodeVersion">N. Version</th>
+            </tr>
+          </thead>
+        </table>
+        <div id="nodesLegend">
+          <div><span class="nodeStatus square-8 bg-success mg-r-5 rounded-circle"></span><span>Node is running OK</span>
+          </div>
+          <div><span class="nodeStatus square-8 bg-warning mg-r-5 rounded-circle"></span><span>Node is not at the latest
+              version</span></div>
+          <div><span class="nodeStatus square-8 bg-danger mg-r-5 rounded-circle"></span><span>Node is not syncing or is
+              lagging behind</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="row" id="globalNodesRow">
+      <div id="globalNodeMap"></div>
+    </div>
+  </div>
+</div>
+
+<div id="dlgCopiedToClipboard" class="modal fade">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content bd-0">
+      <div class="modal-header pd-x-20 dlgBgDarker">
+        <h6 class="tx-14 mg-b-0 tx-uppercase tx-inverse tx-bold">Copied</h6>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body pd-20">
+        <p class="mg-b-5">The connection URL was copied to clipboard
+        </p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-primary-outline" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var correctHeight = 0;
+  var nodesType = 0;
+
+  currentPage = {
+    destroy: function () { },
+    init: function () {
+      loadTranslations();
+    },
+    update: function () { }
+  };
+
+  var nodeLoadingIndicator = $('#nodeInfo').loadingIndicator({
+    useImage: false,
+    showOnInit: false
+  }).data("loadingIndicator");
+
+  function getCountryName(countryCode) {
+    if (isoCountries.hasOwnProperty(countryCode)) {
+      return isoCountries[countryCode];
+    } else {
+      return countryCode;
+    }
+  }
+
+  function copyToClipboard(textToCopy) {
+    var $temp = $("<input>");
+    $("body").append($temp);
+    $temp
+      .val(textToCopy)
+      .select();
+    document.execCommand("copy");
+    $temp.remove();
+  }
+
+  function onConnectURLClick(e) {
+    copyToClipboard($(e.target).html());
+  }
+
+
+  function loadNodesDataToTable(initialLoad) {
+    $.getJSON("https://api.github.com/repos/ConcealNetwork/conceal-core/releases/latest", function (release) {
+      $.getJSON("https://explorer.conceal.network/pool/list?hasFeeAddr=true&isReachable=true", function (data) {
+        var correctHeightList = {};
+        var correctHeightCnt = 0;
+        var tableData = [];
+        correctHeight = 0;
+
+        if (data.success) {
+          $(data.list).each(function (idx, obj) {
+            var nodeHeight = obj.blockchain ? obj.blockchain.height : 0;
+            var rowData = [];
+
+            if (obj.name) {
+              if (obj.url && obj.url.host) {
+                rowData.push(obj.url.host + ":" + (obj.url.port || "16000"));
+              } else {
+                rowData.push(obj.location ? (obj.location.ip + ":" + (obj.nodePort || "16000")) : (obj.ip.substring(7) + ":" + (obj.nodePort || "16000")));
+              }
+              rowData.push(obj.name);
+              if ((obj.location) && (obj.location.data)) {
+                rowData.push(getCountryName(obj.location.data.country));
+              } else {
+                rowData.push("N/A");
+              }
+              rowData.push(moment(obj.status.startTime).fromNow());
+              rowData.push(obj.status.startTime);
+              rowData.push(nodeHeight);
+              rowData.push(obj.status ? (obj.status.uptime || 0) : "0");
+              rowData.push(obj.version || "n/a");
+              rowData.push(obj.blockchain ? obj.blockchain.version : "n/a");
+              tableData.push(rowData);
+
+              // increase the node height for the current node
+              correctHeightList[nodeHeight] = (correctHeightList[nodeHeight] || 0) + 1;
+            }
+          });
+
+          // find the correct height
+          for (var propertyName in correctHeightList) {
+            // you can get the value like this: myObject[propertyName]
+            if (correctHeightList[propertyName] > correctHeightCnt) {
+              correctHeightCnt = correctHeightList[propertyName];
+              correctHeight = propertyName;
+            }
+          }
+
+          $("#nodesNumber").html("(" + tableData.length + " online)");
+        }
+
+        if (initialLoad) {
+          $('#nodesTable').DataTable({
+            data: tableData,
+            responsive: true,
+            "columns": [
+              {
+                className: "ntNodeConnectURL",
+                render: function (data, type, row) {
+                  return '<a href="#" data-toggle="modal" data-target="#dlgCopiedToClipboard" onclick="onConnectURLClick(event)">' + data + '</a>';
+                }
+              }, {
+                className: "ntNodeName"
+              }, {
+                className: "ntNodeLocation"
+              }, {
+                className: "ntNodeStarted",
+                iDataSort: 4
+              }, {
+                className: "ntNodeStartedActual",
+                visible: false,
+                searchable: false
+              }, {
+                className: "ntNodeHeight"
+              }, {
+                className: "ntNodeUptime",
+                render: function (data, type, row) {
+                  return data + "%";
+                }
+              }, {
+                className: "ntGuardianVersion"
+              }, {
+                className: "ntNodeVersion",
+                orderable: false,
+                render: function (data, type, row) {
+                  if (row[5] < (correctHeight - 2)) {
+                    return data + '<span class="nodeStatus square-8 bg-danger mg-r-5 rounded-circle"></span>';
+                  } else if (row[8] != release.tag_name) {
+                    return data + '<span class="nodeStatus square-8 bg-warning mg-r-5 rounded-circle"></span>';
+                  } else {
+                    return data + '<span class="nodeStatus square-8 bg-success mg-r-5 rounded-circle"></span>';
+                  }
+                }
+              }
+            ]
+          });
+
+          // show refresh button
+          $("#refreshNodes").show();
+        } else {
+          $("#nodesTable")
+            .DataTable()
+            .clear();
+          $("#nodesTable")
+            .DataTable()
+            .rows
+            .add(tableData)
+            .draw();
+        }
+
+        nodeLoadingIndicator.hide();
+      });
+    });
+  }
+
+  $("#refreshNodes").click(function () {
+    nodeLoadingIndicator.show();
+
+    if (nodesType == 0) {
+      loadNodesDataToTable(false);
+    } else {
+      CCX_GlobalNodeMap.load('globalNodeMap', function (success) {
+        nodeLoadingIndicator.hide();
+      });
+    }
+
+  });
+
+  $("#choseNodeListType").click(function () {
+    nodeLoadingIndicator.show();
+
+    if (nodesType == 0) {
+      $("#nodesSubtitle").html("This is a map of all Nodes that were detected on the network recently.");
+      $("#choseNodeListTypeText").html("Smart Nodes");
+      $("#nodesTitle").html("All Nodes")
+      nodesType = 1;
+
+      $("#remoteNodesRow").hide();
+      $("#globalNodesRow").show();
+      CCX_GlobalNodeMap.load('globalNodeMap', function (success) {
+        nodeLoadingIndicator.hide();
+      });
+    } else {
+      $("#nodesSubtitle").html("This is a list of Smart Nodes, that are currently in use as remote nodes on the network");
+      $("#choseNodeListTypeText").html("All Nodes Map");
+      $("#nodesTitle").html("Smart Nodes")
+      nodesType = 0;
+
+      $("#remoteNodesRow").show();
+      $("#globalNodesRow").hide();
+      loadNodesDataToTable(false);
+    }
+  });
+
+  // do the intial load
+  nodeLoadingIndicator.show();
+  loadNodesDataToTable(true);
+</script>

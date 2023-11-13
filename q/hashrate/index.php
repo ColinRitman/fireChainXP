@@ -2,7 +2,7 @@
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_URL, 'http://188.226.177.187:18180/getinfo');
+curl_setopt($ch, CURLOPT_URL, 'https://fango.money:18180/getinfo');
 $result = curl_exec($ch);
 $obj = json_decode($result, TRUE);
 curl_close($ch);
@@ -11,3 +11,4 @@ $difficulty = $obj['difficulty'];
 $hashrate = round($difficulty / 480);
 print_r($hashrate);
 ?>
+

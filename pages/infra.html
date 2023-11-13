@@ -1,0 +1,203 @@
+<div class="card mg-t-20" id="nodeInfo">
+  <div class="card-header tx-medium bd-0 tx-white bg-primary-dark">
+    <h2>
+      <i class="fa fa-ra" aria-hidden="true"></i>Elder Nodes <span></span>
+   <a href="http://radioactive.sytes.net:8385/status" style="">
+        <span style="font-family: lato;background-color: transparent;font-size: medium;margin-left: 10px;border: 2px solid rgb(191, 191, 191);color: gold;border-radius: 8px;padding: 8px 8px;">
+View Uptime Rankings</span>
+      </a>
+    </h2>
+</div>
+<div class="card-body card-body-info">
+<li style="margin: 10px 10px;">
+<a href="http://fangotango.hopto.org:18180/getinfo" colspan="9" class="dataTables" valign="top" style="margin-bottom: 20px;margin-top: 20px;"> fangotango.hopto.org:18180</a>
+<li style="margin: 10px 10px;">
+<a href="http://fango.money:18180/getinfo" colspan="9" class="dataTables" valign="top" style="margin-bottom: 20px;margin-top: 20px;">fango.money:18180</a></li>
+<li style="margin: 10px 10px;">
+<a href="http://xfg.ms-pool.net.ua:18180/getinfo" colspan="9" class="dataTables" valign="top" style="margin-bottom: 10px;padding-top: 20px;">xfg.ms-pool.net.ua:18180</a></li>
+<li style="margin: 10px 10px;">
+<a href="http://82.223.203.210:18180/getinfo" colspan="9" class="dataTables" valign="top" style="margin-bottom: 20px;margin-top: 20px;">radioactive.es:18180</a></li>
+<li style="margin: 10px 10px;">
+<a href="http://104.236.0.16:18180/getinfo" colspan="9" class="dataTables" valign="top" style="margin-bottom: 20px;margin-top: 20px;">104.236.0.16:18180</a></li>
+<li style="margin: 10px 10px;">
+<a href="http://188.226.177.187:18180/getinfo" colspan="9" class="dataTables" valign="top" style="margin-bottom: 20px;margin-top: 20px;">188.226.177.187:18180</a></li>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="dlgCopiedToClipboard" class="modal fade">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content bd-0">
+      <div class="modal-header pd-x-20 dlgBgDarker">
+        <h6 class="tx-14 mg-b-0 tx-uppercase tx-inverse tx-bold">Copied</h6>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body pd-20">
+        <p class="mg-b-5">The connection URL was copied to clipboard
+        </p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-primary-outline" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var correctHeight = 0;
+
+  currentPage = {
+    destroy: function () { },
+    init: function () {
+      loadTranslations();
+    },
+    update: function () { }
+  };
+
+  var nodeLoadingIndicator = $('#nodeInfo').loadingIndicator({
+    useImage: false,
+    showOnInit: false
+  }).data("loadingIndicator");
+
+  function getCountryName(countryCode) {
+    if (isoCountries.hasOwnProperty(countryCode)) {
+      return isoCountries[countryCode];
+    } else {
+      return countryCode;
+    }
+  }
+
+  function copyToClipboard(textToCopy) {
+    var $temp = $("<input>");
+    $("body").append($temp);
+    $temp
+      .val(textToCopy)
+      .select();
+    document.execCommand("copy");
+    $temp.remove();
+  }
+
+  function onConnectURLClick(e) {
+    copyToClipboard($(e.target).html());
+  }
+
+  function loadNodesDataToTable(initialLoad) {
+    $.getJSON("https://api.github.com/repos/ConcealNetwork/conceal-core/releases/latest", function (release) {
+      $.getJSON("https://explorer.conceal.network/pool/list?hasFeeAddr=false&isReachable=false&isSynced=True", function (data) {
+        var correctHeightList = {};
+        var correctHeightCnt = 0;
+        var tableData = [];
+        correctHeight = 0;
+
+        if (data.success) {
+          $(data.list).each(function (idx, obj) {
+            var nodeHeight = obj.blockchain ? obj.blockchain.height : 0;
+            var rowData = [];
+
+            if (obj.name) {
+              rowData.push(obj.location ? (obj.location.ip + ":" + (obj.nodePort || "16000")) : (obj.ip.substring(7) + ":" + (obj.nodePort || "16000")));
+              rowData.push(obj.name);
+              if ((obj.location) && (obj.location.data)) {
+                rowData.push(getCountryName(obj.location.data.country));
+              } else {
+                rowData.push("N/A");
+              }
+              rowData.push(moment(obj.status.startTime).fromNow());
+              rowData.push(nodeHeight);
+              rowData.push(obj.blockchain ? obj.blockchain.status : "n/a");
+              rowData.push(obj.status ? (obj.status.uptime || 0) : "0");
+              rowData.push(obj.os);
+              rowData.push(obj.blockchain ? obj.blockchain.version : "n/a");
+              tableData.push(rowData);
+
+              // increase the node height for the current node
+              correctHeightList[nodeHeight] = (correctHeightList[nodeHeight] || 0) + 1;
+            }
+          });
+
+          // find the correct height
+          for (var propertyName in correctHeightList) {
+            // you can get the value like this: myObject[propertyName]
+            if (correctHeightList[propertyName] > correctHeightCnt) {
+              correctHeightCnt = correctHeightList[propertyName];
+              correctHeight = propertyName;
+            }
+          }
+
+          $("#nodesNumber").html("(" + tableData.length + " online)");
+        }
+
+        if (initialLoad) {
+          $('#nodesTable').DataTable({
+            data: tableData,
+            responsive: true,
+            "columns": [
+              {
+                className: "ntNodeConnectURL",
+                render: function (data, type, row) {
+                  return '<a href="#" data-toggle="modal" data-target="#dlgCopiedToClipboard" onclick="onConnectURLClick(event)">' + data + '</a>';
+                }
+              }, {
+                className: "ntNodeName"
+              }, {
+                className: "ntNodeLocation"
+              }, {
+                className: "ntNodeStarted"
+              }, {
+                className: "ntNodeHeight"
+              }, {
+                className: "ntNodeStatus"
+              }, {
+                className: "ntNodeUptime",
+                render: function (data, type, row) {
+                  return data + "%";
+                }
+              }, {
+                className: "ntNodePlatform",
+                orderable: false
+              }, {
+                className: "ntNodeVersion",
+                orderable: false,
+                render: function (data, type, row) {
+                  if ((row[5] != "OK") || (row[4] < (correctHeight - 2))) {
+                    return data + '<span class="nodeStatus square-8 bg-danger mg-r-5 rounded-circle"></span>';
+                  } else if (row[8] != release.tag_name) {
+                    return data + '<span class="nodeStatus square-8 bg-warning mg-r-5 rounded-circle"></span>';
+                  } else {
+                    return data + '<span class="nodeStatus square-8 bg-success mg-r-5 rounded-circle"></span>';
+                  }
+                }
+              }
+            ]
+          });
+
+          // show refresh button
+          $("#refreshNodes").show();
+        } else {
+          $("#nodesTable")
+            .DataTable()
+            .clear();
+          $("#nodesTable")
+            .DataTable()
+            .rows
+            .add(tableData)
+            .draw();
+        }
+
+        nodeLoadingIndicator.hide();
+      });
+    });
+  }
+
+  $("#refreshNodes").click(function () {
+    nodeLoadingIndicator.show();
+    loadNodesDataToTable(false);
+  });
+
+  // do the intial load
+  nodeLoadingIndicator.show();
+  loadNodesDataToTable(true);
+</script>

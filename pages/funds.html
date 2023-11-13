@@ -1,0 +1,544 @@
+<div class="card mg-t-20" id="fundsVerify">
+  <div class="card-header tx-medium bd-0 tx-white bg-primary-dark">
+    <h2>
+      <i class="fa fa-bank" aria-hidden="true"></i> Funds
+      <button class="btn  btn-primary-outline dropdown-toggle" type="button" id="verifyFunds" data-toggle="dropdown"
+        aria-haspopup="true" aria-expanded="false">
+        <span class="btnIcon fa fa-search"></span><span tkey="bpVerify">Verify</span>
+      </button>
+      <div class="dropdown-menu" aria-labelledby="verifyFunds">
+        <a class="dropdown-item" href="javascript:verifyCCXFunds()">Verify CCX funds</a>
+        <a class="dropdown-item" href="javascript:verifywCCXFunds_ETH()">Verify ETH wCCX funds</a>
+        <a class="dropdown-item" href="javascript:verifywCCXFunds_ETH()">Verify BSC wCCX funds</a>
+        <a class="dropdown-item" href="index.html?preloadData=ccx#check_funds">Got to verify page for CCX funds</a>
+        <a class="dropdown-item" href="index.html?preloadData=wccx_eth#check_funds">Got to verify page for ETH wCCX funds</a>
+        <a class="dropdown-item" href="index.html?preloadData=wccx_bsc#check_funds">Got to verify page for BSC wCCX funds</a>
+          funds</a>
+      </div>
+    </h2>
+  </div>
+  <div class="card-body card-body-info">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="panel panel-default" id="verification_result">
+          <div class="panel-heading">
+            <h3 class="panel-title" tkey="bpVerificationResult">Verification result</h3>
+          </div>
+          <div class="panel-body">
+            <p class="verified"><i class="fa fa-2x"></i> <span></span></p>
+          </div>
+        </div>
+        <table id="fundsTable" class="table display responsive nowrap">
+          <thead>
+            <tr>
+              <th class="wd-15p ntFundsGroup">Group</th>
+              <th class="wd-15p ntFundsCategory">Category</th>
+              <th class="wd-20p ntFundsPaid">Paid (CCX)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr class="fundsFooter">
+              <th colspan="2">Total spent so far:</th>
+              <th class="footerValue footerSpent"></th>
+            </tr>
+            <tr class="fundsFooter">
+              <th colspan="2">Funds available:</th>
+              <th class="footerValue footerAvailable"></th>
+            </tr>
+            <tr class="fundsFooter">
+              <th colspan="2">Funds in reserve:</th>
+              <th class="footerValue footerReserve"></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body card-body-info">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="panel panel-default" id="verification_result">
+          <div class="panel-heading">
+            <h3 class="panel-title" tkey="bpVerificationResult">Funds unlocking details</h3>
+            <h6 class="panel-subttitle" tkey="bpVerificationResult">The amount may contain more than just the unlocked
+              funds. Please check the explorer</h6>
+          </div>
+          <div class="panel-body">
+            <p class="verified"><i class="fa fa-2x"></i> <span></span></p>
+          </div>
+        </div>
+        <table id="fundsUnlockTable" class="table table-hover">
+          <thead>
+            <tr>
+              <th><span tkey="txHash">TX Hash</span></th>
+              <th><span tkey="txTimestamp">Timestamp</span></th>
+              <th><span tkey="txAmount">Amount</span></th>
+            </tr>
+          </thead>
+          <tbody id="premine_rows">
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row pd-15">
+    <div class="col-xl-12 mg-t-20 mg-xl-t-0 chartDivisionPieWrapper">
+      <div class="pd-t-30 pd-b-20 pd-x-20">
+        <div id="chartDivisionPie" style="width: 100%; min-height: 600px;"></div>
+      </div>
+    </div><!-- col-6 -->
+  </div><!-- row -->
+  <div class="row pd-15">
+    <div class="col-xl-12 mg-t-20 mg-xl-t-0 chartOverallPieWrapper">
+      <div class="pd-t-30 pd-b-20 pd-x-20">
+        <div id="chartOverallPie" style="width: 100%; min-height: 600px;"></div>
+      </div>
+    </div><!-- col-6 -->
+  </div><!-- row -->
+  <p class="text-center">
+    <a href="funds.dat" target="_blank" download="funds.dat">
+      <button type="button" class="btn btn-primary-outline" id="downloadFunds" tkey="btnDownloadFunds">
+        Download Funds
+      </button>
+    </a>
+    <button type="button" class="btn btn-primary-outline" id="uploadFunds" tkey="btnUploadFunds">Update Funds</button>
+  </p>
+</div>
+
+<div id="uploadFundsDialog" class="modal fade" style="display: none;" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content bd-0 bg-transparent rounded overflow-hidden">
+      <div class="modal-body pd-0">
+        <div class="row no-gutters">
+          <div class="col-lg-12 bg-gray-900">
+            <div class="pd-y-30 pd-xl-x-30">
+              <button type="button" class="close tx-white" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+              </button>
+              <div class="pd-x-30 pd-y-10">
+                <h3 class="tx-gray-300 tx-normal mg-b-5">Upload the funds data</h3>
+                <p>Paste the correctly formatted funds.dat JSON file into the field</p>
+                <div class="form-group">
+                  <label for="uploadKey">Upload key</label>
+                  <input name="uploadKey" class="form-control" id="uploadKey" placeholder="Enter the upload key"
+                    type="password">
+                </div>
+                <div class="form-group mg-b-20">
+                  <label for="fundsData">Funds data...</label>
+                  <textarea name="fundsData" class="form-control" id="fundsData"></textarea>
+                </div><!-- form-group -->
+                <div class="form-group mg-b-20">
+                  <label id="uploadError"></label>
+                </div><!-- form-group -->
+
+                <button class="btn btn-primary btn-block" id="btnUploadFundsData">Upload</button>
+              </div>
+            </div><!-- pd-20 -->
+          </div><!-- col-6 -->
+        </div><!-- row -->
+      </div><!-- modal-body -->
+    </div><!-- modal-content -->
+  </div><!-- modal-dialog -->
+</div>
+
+<div id="uploadSuccessDialog" class="modal fade" style="display: none;" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content bd-0 bg-transparent rounded overflow-hidden">
+      <div class="modal-body pd-0">
+        <div class="row no-gutters">
+          <div class="col-lg-12 bg-gray-900">
+            <div class="pd-y-30 pd-xl-x-30">
+              <div class="pd-x-30 pd-y-10">
+                <h3 class="tx-gray-300 tx-normal mg-b-5">Funds were succesfully uploaded!</h3>
+                <p style="text-align: center;">Click the OK button to close the dialog</p>
+                <button class="btn btn-primary btn-block" data-dismiss="modal">OK</button>
+              </div>
+            </div><!-- pd-20 -->
+          </div><!-- col-6 -->
+        </div><!-- row -->
+      </div><!-- modal-body -->
+    </div><!-- modal-content -->
+  </div><!-- modal-dialog -->
+</div>
+
+<script>
+  var result_container = $("#verification_result");
+  result_container.hide();
+  var groupColumn = 0;
+  var reserveData = null;
+  var fundsProof = null;
+
+  var categories = {
+    "Total": "Total funds by divisions"
+  }
+
+  currentPage = {
+    destroy: function () { },
+    init: function () {
+      loadTranslations();
+      $('.dropdown-toggle').dropdown();
+    },
+    update: function () { }
+  };
+
+  function numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  $.getJSON("funds.dat?" + makeid(20), function (resultFunds) {
+    fundsProof = resultFunds;
+
+    checkReserveRaw("", fundsProof.keys.ccx.address, fundsProof.keys.ccx.signature, function (resultReserve) {
+      reserveData = resultReserve;
+
+      // unspent funds calculated
+      var unspentFunds = (parseFloat(fundsProof.wallet.total) * coinUnits) - (reserveData.result.total / coinUnits);
+
+      $('#fundsTable').DataTable({
+        "displayLength": 300,
+        "data": fundsProof.wallet.data,
+        "searching": false,
+        "paging": false,
+        "ordering": false,
+        "responsive": false,
+        "info": true,
+        "columns": [
+          {
+            className: "ntFundsGroup",
+            "visible": false
+          }, {
+            className: "ntFundsCategory"
+          }, {
+            className: "ntFundsPaid"
+          }
+        ],
+        rowGroup: {
+          startRender: function (rows, group) {
+            return categories[group] + ' (' + rows.count() + ' categories)';
+          },
+          endRender: function (rows, group) {
+            var sumPaid = rows
+              .data()
+              .pluck(2)
+              .reduce(function (a, b) {
+                return a + b.replace(/[^\d]/g, '') * 1;
+              }, 0);
+
+            if ($('#fundsTable').width() > 400) {
+              return $('<tr/>')
+                .append('<td class="sumTitle">Sumarum for "' + categories[group] + '"</td>')
+                .append('<td class="sumPaid">' + numberWithCommas(sumPaid) + '</td>');
+            } else {
+              return $('<tr/>')
+                .append('<td class="sumTitle" colspan="2">Sumarum: ' + numberWithCommas(sumPaid) + '</td>');
+            }
+          },
+          dataSrc: 0
+        },
+        footerCallback: function (row, data, start, end, display) {
+          var api = this.api(), data;
+
+          // Remove the formatting to get integer data for summation
+          var intVal = function (i) {
+            return typeof i === 'string' ?
+              i.replace(/[\$,]/g, '') * 1 :
+              typeof i === 'number' ?
+                i : 0;
+          };
+
+          // Total over all pages
+          total = api
+            .column(2)
+            .data()
+            .reduce(function (a, b) {
+              return intVal(a) + intVal(b);
+            }, 0);
+
+          // Total over this page
+          pageTotal = api
+            .column(2, { page: 'current' })
+            .data()
+            .reduce(function (a, b) {
+              return intVal(a) + intVal(b);
+            }, 0);
+
+          // calculate the unspent funds from the data
+          var currUnspentFunds = Math.trunc(unspentFunds - pageTotal);
+
+          // Update footer
+          if ($('#fundsTable').DataTable().columns(':visible').count() > 1) {
+            $('tr:eq(0) th:eq(0)', api.table().footer()).html("Total spent so far:");
+            $('tr:eq(0) th:eq(1)', api.table().footer()).html(numberWithCommas(pageTotal) + " CCX");
+            $('tr:eq(1) th:eq(0)', api.table().footer()).html("Funds available:");
+            $('tr:eq(1) th:eq(1)', api.table().footer()).html(formatNumber(getReadableCoins(reserveData.result.total, 0)));
+            $('tr:eq(2) th:eq(0)', api.table().footer()).html("Funds in reserve:");
+            $('tr:eq(2) th:eq(1)', api.table().footer()).html(numberWithCommas(currUnspentFunds) + " CCX");
+          } else {
+            $('tr:eq(0) th:eq(0)', api.table().footer()).html("Total spent: " + numberWithCommas(pageTotal) + " CCX");
+            $('tr:eq(1) th:eq(0)', api.table().footer()).html("Funds available: " + getReadableCoins(reserveData.result.total, 0));
+            $('tr:eq(2) th:eq(0)', api.table().footer()).html("Funds in reserve: " + numberWithCommas(currUnspentFunds) + " CCX");
+          }
+        }
+      });
+
+      var dataSeries = [];
+      var dataTitles = [];
+
+      fundsProof.wallet.data.forEach(function (value, index, array) {
+        dataSeries.push({ value: parseFloat(value[2].replace(/,/g, '')), name: "" });
+        dataTitles.push(value[1]);
+      });
+
+      var spentSoFar = dataSeries.reduce(function (total, num) {
+        return total + Math.round(num.value);
+      }, 0);
+
+      // unspent funds calculated and total funds      
+      var totalFundsAvailable = parseFloat(fundsProof.wallet.total) * coinUnits;
+      var currUnspentFunds = Math.trunc(unspentFunds - spentSoFar);
+
+      // push the total available funds for the project
+      dataSeries.push({ value: Math.trunc(currUnspentFunds + (reserveData.result.total / coinUnits)), itemStyle: { color: 'blue' }, name: "" });
+      dataTitles.push("Unspent");
+
+      // get the ideal palette colors for the divisions chart
+      var dataColors = palette('cb-BrBG', dataSeries.length);
+      dataColors = dataColors.map(function (e) { return '#' + e });
+      // append the percentages to the data titles array
+      for (var i = 0; i < dataTitles.length; i++) {
+        dataTitles[i] = dataTitles[i] + ' (' + Math.round((dataSeries[i].value / (parseFloat(fundsProof.wallet.total) * coinUnits)) * 100) + '%)';
+        dataSeries[i].name = dataTitles[i];
+      }
+
+      var chartDivisionPie = echarts.init(document.getElementById('chartDivisionPie'));
+      chartDivisionPie.setOption({
+        title: {
+          text: 'Funds Spent by Divisions',
+          left: 'center',
+          textStyle: {
+            color: '#ccc'
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: "{b} : {c} CCX"
+        },
+        legend: {
+          x: 'left',
+          top: 40,
+          orient: 'vertical',
+          data: dataTitles,
+          textStyle: {
+            color: '#ccc'
+          }
+        },
+        calculable: true,
+        series: [{
+          name: 'Spent by divison',
+          type: 'pie',
+          color: ["#87CEEB", "#008000", "#FFD700", "#8B008B", "#B22222", "#4169E1", "#D2691E"],
+          radius: ['30%', '65%'],
+          center: ['50%', '60%'],
+          data: dataSeries,
+          itemStyle: {
+            emphasis: {
+              shadowBlur: 20,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          },
+          label: {
+            normal: {
+              show: false
+            }
+          },
+          lableLine: {
+            normal: {
+              show: false
+            }
+          },
+          animationType: 'scale',
+          animationEasing: 'elasticOut'
+        }],
+      });
+
+      var dataSeries = [];
+      var dataTitles = [];
+
+      // push the available funds into the array
+      dataSeries.push({ value: Math.trunc(reserveData.result.total / coinUnits), name: "" });
+      dataTitles.push("Available funds");
+      // push the reserve funds into the array
+      dataSeries.push({ value: currUnspentFunds, name: "" });
+      dataTitles.push("Funds in reserve");
+      // push the spent funds into the array
+      dataSeries.push({ value: spentSoFar, name: "" });
+      dataTitles.push("Spent funds");
+
+      // get the ideal palette colors for the divisions chart
+      var dataColors = palette('cb-BrBG', dataSeries.length);
+      dataColors = dataColors.map(function (e) { return '#' + e });
+      // append the percentages to the data titles array
+      for (var i = 0; i < dataTitles.length; i++) {
+        dataTitles[i] = dataTitles[i] + ' (' + Math.round(dataSeries[i].value / totalFundsAvailable * 100) + '%)';
+        dataSeries[i].name = dataTitles[i];
+      }
+
+      var chartOverallPie = echarts.init(document.getElementById('chartOverallPie'));
+      chartOverallPie.setOption({
+        title: {
+          text: 'Current Funds Distribution',
+          left: 'center',
+          textStyle: {
+            color: '#ccc'
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: "{b} : {c} CCX"
+        },
+        legend: {
+          x: 'left',
+          top: 40,
+          orient: 'vertical',
+          data: dataTitles,
+          textStyle: {
+            color: '#ccc'
+          }
+        },
+        calculable: true,
+        series: [{
+          name: 'Funds distribution',
+          type: 'pie',
+          color: ["#4169E1", "#008000", "#B22222"],
+          radius: ['30%', '65%'],
+          center: ['50%', '60%'],
+          data: dataSeries,
+          itemStyle: {
+            emphasis: {
+              shadowBlur: 20,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          },
+          label: {
+            normal: {
+              show: false
+            }
+          },
+          lableLine: {
+            normal: {
+              show: false
+            }
+          },
+          animationType: 'scale',
+          animationEasing: 'elasticOut'
+        }],
+      });
+
+      $(window).on('resize', function () {
+        if (chartDivisionPie) {
+          chartDivisionPie.resize();
+        }
+      });
+    });
+
+    // set the funds unlock TX data
+    var fundsTable = $('#fundsUnlockTable').DataTable({
+      "displayLength": 300,
+      "searching": false,
+      "paging": false,
+      "ordering": false,
+      "responsive": false,
+      "info": true
+    });
+
+    fundsProof.transactions.forEach(function (hash, index) {
+      xhrGetTransaction = $.ajax({
+        url: api + '/json_rpc',
+        method: "POST",
+        data: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "test",
+          method: "f_transaction_json",
+          params: {
+            hash: hash
+          }
+        }),
+        dataType: 'json',
+        cache: 'false',
+        success: function (data) {
+          fundsTable.row.add([
+            "<a href='https://explorer.conceal.network/index.html?hash=" + data.result.txDetails.hash + "#blockchain_transaction'>" + data.result.txDetails.hash + "</a>",
+            formatDate(data.result.block.timestamp),
+            getReadableCoins2(400000000000, 0)
+          ]).draw(false);
+        }
+      });
+    });
+  });
+
+  function verifyCCXFunds() {
+    result_container.hide();
+    checkReserve(result_container, "", fundsProof.keys.ccx.address, fundsProof.keys.ccx.signature);
+  }
+
+  function verifywCCXFunds_ETH() {
+    result_container.hide();
+    checkReserve(result_container, "", fundsProof.keys.wccx_eth.address, fundsProof.keys.wccx_eth.signature);
+  }
+
+  function verifywCCXFunds_BSC() {
+    result_container.hide();
+    checkReserve(result_container, "", fundsProof.keys.wccx_bsc.address, fundsProof.keys.wccx_bsc.signature);
+  }
+
+  $("#uploadFunds").click(function () {
+    $("#uploadError").hide();
+    $("#uploadKey").val("");
+    $("#fundsData").val(JSON.stringify(fundsProof, null, 2));
+    $('#uploadFundsDialog').modal('show');
+  });
+
+  $("#btnUploadFundsData").click(function () {
+    $.post("funds.php", { fundsData: $("#fundsData").val(), uploadKey: $("#uploadKey").val() }).done(function (data) {
+      try {
+        var responseData = JSON.parse(data);
+        if (responseData.success) {
+          $('#uploadFundsDialog').modal('hide');
+          $('#uploadSuccessDialog').modal('show');
+        } else {
+          $("#uploadError").html(responseData.reason);
+          $("#uploadError").show();
+        }
+      }
+      catch (err) {
+        $("#uploadError").html(err.message);
+        $("#uploadError").show();
+      }
+    });
+  });
+
+  var waitForFinalEvent = (function () {
+    var timers = {};
+    return function (callback, ms, uniqueId) {
+      if (!uniqueId) {
+        uniqueId = "Don't call this twice without a uniqueId";
+      }
+      if (timers[uniqueId]) {
+        clearTimeout(timers[uniqueId]);
+      }
+      timers[uniqueId] = setTimeout(callback, ms);
+    };
+  })();
+
+  $(window).resize(function () {
+    waitForFinalEvent(function () {
+      $('#fundsTable').DataTable().draw();
+    }, 500, "OnFundsResize");
+  });
+
+</script>

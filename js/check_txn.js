@@ -115,4 +115,3 @@ $("#check_transaction").click(function() {
         }
     });
 });
-

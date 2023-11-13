@@ -29,6 +29,7 @@
         },
         init: function(){
             getTransactions();
+			loadTranslations();
         },
         update: function(){
         }
@@ -66,7 +67,7 @@
         return '<td>' + formatPaymentLink(transaction.hash) + '</td>' +
                '<td>' + getReadableCoins(transaction.fee, 4, true) + '</td>' +
                '<td>' + getReadableCoins(transaction.amount_out, 4, true) + '</td>' +
-               '<td>' + formatBytes(parseInt(transaction.size)) + '</td>';
+               '<td>' + localizeNumber(transaction.size) + '</td>';
     }
 
     function getTransactionRowElement(transaction, jsonString){

@@ -2,7 +2,7 @@
 
 $data_string = '{"jsonrpc":"2.0","id":"test","method":"getlastblockheader","params":" "}';
 
-$ch = curl_init('http://zirtysperzys.info:18180/json_rpc');
+$ch = curl_init('https://fango.money:18180/json_rpc');
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -28,8 +28,7 @@ curl_close($ch);
 
 $data_string2 = '{"jsonrpc":"2.0","id":"test","method":"f_block_json","params":{"hash":"'.$hash.'"}}';
 
-
-$ch2 = curl_init('http://188.226.177.187:18180/json_rpc');
+$ch2 = curl_init('https://fango.money:18180/json_rpc');
 curl_setopt($ch2, CURLOPT_CUSTOMREQUEST, "POST");
 curl_setopt($ch2, CURLOPT_POSTFIELDS, $data_string2);
 curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);

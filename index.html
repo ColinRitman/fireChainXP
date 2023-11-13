@@ -1,549 +1,421 @@
 <!DOCTYPE html>
 <html>
+
 <head lang="en">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
-    <link rel="shortcut icon" href="favicon.ico">
-    <link rel="icon" type="image/icon" href="favicon.ico" >
-    <title>{{{{XFG}}}}ChainXP</title>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.4.0/jquery.timeago.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-sparklines/2.1.2/jquery.sparkline.min.js"></script>
-    <link href="/css/themes/dark/style.css" rel="stylesheet" id="theme_link">
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
-    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <link href="//fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet" type="text/css">
-    <link href="//fonts.googleapis.com/css?family=Caudex:400,700" rel="stylesheet" type="text/css">
- <script src="/config.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+  <link rel="shortcut icon" href="xfg.png">
+  <link rel="icon" type="image/icon" href="xfg.png">
+  <title>Fuego Explorer</title>
+  <!-- vendor css -->
+  <link href="lib/font-awesome/css/font-awesome.css" rel="stylesheet">
+  <link href="lib/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="lib/Ionicons/css/ionicons.css" rel="stylesheet">
+  <link href="lib/chartist/css/chartist.css" rel="stylesheet">
+  <link href="lib/select2/css/select2.min.css" rel="stylesheet">
+  <link href="lib/datatables/css/jquery.dataTables.css" rel="stylesheet">
+
+  <!-- Slim CSS -->
+  <link rel="stylesheet" href="css/themes/slim.css">
+  <link rel="stylesheet" href="css/themes/slim.one.css">
+  <link rel="stylesheet" href="css/themes/loading-indicator.css">
+
+  <!-- script files -->
+
+  <script src="lib/jquery/js/jquery.js"></script>
+  <script src="lib/popper.js/js/popper.js"></script>
+  <script src="lib/bootstrap/js/bootstrap.js"></script>
+  <script src="lib/jquery.cookie/js/jquery.cookie.js"></script>
+  <script src="lib/jquery.timeago/js/jquery.timeago.js"></script>
+  <script src="lib/select2/js/select2.full.min.js"></script>
+  <script src="lib/echarts/js/echarts.min.js"></script>
+  <script src="lib/moment/js/moment.js"></script>
+  <script src="lib/chart.js/js/Chart.js"></script>
+  <script src="lib/chartist/js/chartist.js"></script>
+  <script src="lib/datatables/js/jquery.dataTables.js"></script>
+  <script src="lib/jquery.sparkline.bower/js/jquery.sparkline.min.js"></script>
+
+
+  <script src="js/loading-indicator.min.js"></script>
+  <script src="js/ResizeSensor.js"></script>
+  <script src="js/palette.js"></script>
+  <script src="js/slim.js"></script>
+  <script src="./countries.js"></script>
+  <script src="./config.js"></script>
+  <script src="js/main.js"></script>
 </head>
+
 <body>
-
-<script>
-    var blockchainExplorer 	= "/?hash={id}#blockchain_block";
-    var transactionExplorer = "/?hash={id}#blockchain_transaction";
-    var paymentIdExplorer 	= "/?hash={id}#blockchain_payment_id";
-
-    var style_cookie_name = "style";
-    var style_cookie_duration = 365;
-    var style_domain = window.location.hostname;
-
-  
-    function getTransactionUrl(id) {
-        return transactionExplorer.replace('{symbol}', symbol.toLowerCase()).replace('{id}', id);
-    }
-
-    $.fn.update = function(txt){
-        var el = this[0];
-        if (el.textContent !== txt)
-            el.textContent = txt;
-        return this;
-    };
-
-    function updateTextClasses(className, text){
-        var els = document.getElementsByClassName(className);
-        for (var i = 0; i < els.length; i++){
-            var el = els[i];
-            if (el.textContent !== text)
-                el.textContent = text;
-        }
-    }
-
-    function updateText(elementId, text){
-        var el = document.getElementById(elementId);
-        if (el.textContent !== text){
-            el.textContent = text;
-        }
-        return el;
-    }
-
-    function updateTextLinkable(elementId, text){
-        var el = document.getElementById(elementId);
-        if (el.innerHTML !== text){
-            el.innerHTML = text;
-        }
-        return el;
-    }
-
-    var currentPage;
-    var lastStats;
-    var nodeStatus;
-
-
-    function getReadableHashRateString(hashrate){
-        var i = 0;
-        var byteUnits = [' H', ' KH', ' MH', ' GH', ' TH', ' PH' ];
-        while (hashrate > 1024){
-            hashrate = hashrate / 1024;
-            i++;
-        }
-        return hashrate.toFixed(2) + byteUnits[i];
-    }
-
-    function getReadableDifficultyString(difficulty, precision){
-        if (isNaN(parseFloat(difficulty)) || !isFinite(difficulty)) return 0;
-        if (typeof precision === 'undefined') precision = 0;
-        var units = ['', 'k', 'M', 'G', 'T', 'P'],
-            number = Math.floor(Math.log(difficulty) / Math.log(1000));
-        if (units[number] === undefined || units[number] === null) {
-            return 0
-        }
-        return (difficulty / Math.pow(1000, Math.floor(number))).toFixed(precision) + ' ' +  units[number];
-    }
-
-    function formatBlockLink(hash){
-        return '<a href="' + getBlockchainUrl(hash) + '">' + hash + '</a>';
-    }
-
-    function getReadableCoins(coins, digits, withoutSymbol){
-        var amount = (parseInt(coins || 0) / coinUnits).toFixed(digits || coinUnits.toString().length - 1);
-        return amount + (withoutSymbol ? '' : (' ' + symbol));
-    }
-
-    function formatDate(time){
-        if (!time) return '';
-        return new Date(parseInt(time) * 1000).toLocaleString();
-    }
-    
-    function formatBytes(a,b) {
-		if(0==a)return"0 Bytes";var c=1024,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f]
-    }
-
-    function formatPaymentLink(hash){
-        return '<a href="' + getTransactionUrl(hash) + '">' + hash + '</a>';
-    }
-
-    function pulseLiveUpdate(){
-        var stats_update = document.getElementById('stats_updated');
-        stats_update.style.transition = 'opacity 100ms ease-out';
-        stats_update.style.opacity = 1;
-        setTimeout(function(){
-            stats_update.style.transition = 'opacity 7000ms linear';
-            stats_update.style.opacity = 0;
-        }, 500);
-    }
-
-    window.onhashchange = function(){
-        routePage();
-    };
-
-    function fetchLiveStats() {
-        $.ajax({
-            url: api + '/getinfo',
-            dataType: 'json',
-            type: 'GET',
-            cache: 'false'
-        }).done(function(data, success){
-            pulseLiveUpdate();
-            lastStats = data;
-            nodeStatus = success;
-            currentPage.update();
-	    nodeInfo();
-        }).always(function () {
-            setTimeout(function() {
-                fetchLiveStats();
-            }, refreshDelay);
-        });
-    }
-
-    function floatToString(float) {
-        return float.toFixed(6).replace(/[0\.]+$/, '');
-    }
-
-    function nodeInfo() {
-        if(nodeStatus) {
-			$('#node_connection').html('Online').addClass('text-success').removeClass('text-danger');
-			$('#node_height').html(parseInt(lastStats['height']));
-			$('#node_block').html(parseInt(lastStats['last_known_block_index']));
-			$('#node_diff').html(parseInt(lastStats['difficulty']));
-			$('#node_alt').html(parseInt(lastStats['alt_blocks_count']));
-			$('#node_inc').html(parseInt(lastStats['incoming_connections_count']));
-			$('#node_out').html(parseInt(lastStats['outgoing_connections_count']));
-			$('#node_white').html(parseInt(lastStats['white_peerlist_size']));
-			$('#node_grey').html(parseInt(lastStats['grey_peerlist_size']));
-			if (lastStats['version'] !== 'undefined'){
-				$('#node_ver').html(lastStats['version']);
-			}
-		} else {
-			$('#node_connection').html('Offline').addClass('text-danger').removeClass('text-success');
-		}
-    }
-	
-    var xhrPageLoading;
-    function routePage(loadedCallback) {
-
-        if (currentPage) currentPage.destroy();
-        $('#page').html('');
-        $('#loading').show();
-
-        if (xhrPageLoading)
-            xhrPageLoading.abort();
-
-        $('.hot_link').parent().removeClass('active');
-        var $link = $('a.hot_link[href="' + (window.location.hash || '#') + '"]');
-
-        $link.parent().addClass('active');
-        var page = $link.data('page');
-
-        xhrPageLoading = $.ajax({
-            url: 'pages/' + page,
-            cache: false,
-            success: function (data) {
-                $('#loading').hide();
-                $('#page').show().html(data);
-                currentPage.init();
-                //currentPage.update();
-                if (loadedCallback) loadedCallback();
-            }
-        });
-    }
-
-    function getBlockchainUrl(id) {
-        return blockchainExplorer.replace('{id}', id);
-    }
-
-	function getinfo() {
-		$.ajax({
-			url: api + '/getinfo',
-			timeout: 1500 //in milliseconds
-		})
-		.done(function (data) {
-			try {
-				lastStats = JSON.parse(data);
-			} catch (e) {
-				lastStats = data;
-			}
-			routePage(fetchLiveStats);
-		})
-		.fail(function () {
-			apiList.push(api);
-			api = apiList.shift();
-			getinfo();
-		});
-	}
-	
-    $(function(){
-		getinfo();
-    });
-
-    // Blockexplorer functions
-    urlParam = function(name){
-        var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-        if (results==null){
-           return null;
-        }
-        else{
-           return results[1] || 0;
-        }
-    }
-
-    $(function() {
-        $('[data-toggle="tooltip"]').tooltip();
-    });
-
-	function hex2a(hexx) {
-		var hex = hexx.toString();
-		var str = '';
-		for (var i = 0; i < hex.length; i += 2)
-		    str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-		return str;
-	}
-
-</script>
-
-<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <div class="slim-header">
     <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Menu</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-	
-	<font style="margin-left: 4px;margin-right: 8px;"face="Caudex" size="5"color="white";><strong>{{{{XFG}}}}</strong></font></span>
-	</a>
-
-<div id="stats_updated"><i class="fa fa-bolt"></i></div>
+      <div class="slim-header-left headerLogo">
+<!--        <img src="img/xfg.gif" width="48" height="58"> -->
+        <div class="logoText">
+          <h2 class="slim-logo">
+            <a href="https://fango.money">
+<img src="img/yeysk-regular.png" style="height: 29px;">
+          </h2>
         </div>
-
-        <div class="collapse navbar-collapse">
-
-            <ul class="nav navbar-nav navbar-left explorer_menu">
-
-                <li><a class="hot_link" data-page="home.html" href="#">
-                    <i class="fa fa-chain fa-rotate-270" style="font-size:18px;color:#0078ff" aria-hidden="true"></i><font style="size:18px;color:white">Blockchain</font>
-                </a></li>
-		<li style="display:none;"><a class="hot_link" data-page="pools.html" href="#pools">
-                    <i class="fa fa-group" style="color:#0f80e1" aria-hidden="true"></i>Pools
-		</a></li>
-		<li><a class="hot_link" data-page="check_txn.html" href="#check_txn">
-                    <i class="fa fa-exchange" style="font-size:18px;color:#0078ff" aria-hidden="true"></i> Verify TXNs
-                </a></li>
-		    <li><a class="hot_link" data-page="paper_wallet.html" href="#paperwallet">
-                        <i class="fa fa-money" style="font-size:18px;color:#0078ff" aria-hidden="true"></i> Paper Wallet
-                        </a></li>
-                <li><a class="hot_link" data-page="api.html" href="#api">
-                    <i class="fa fa-code" style="font-size:18px;color:#0078ff" aria-hidden="true"></i> API
-                </a></li>
-
-                <li style="display:none;"><a class="hot_link" data-page="blockchain_block.html" href="#blockchain_block">
-                    <i class="fa fa-cubes"></i> 8L0CK
-                </a></li>
-
-                <li style="display:none;"><a class="hot_link" data-page="blockchain_transaction.html" href="#blockchain_transaction">
-                    <i class="fa fa-cubes"></i> Transaction
-                </a></li>
-
-                <l style="display:none;"><a class="hot_link" data-page="blockchain_payment_id.html" href="#blockchain_payment_id">
-                    <i class="fa fa-cubes"></i> Transactions by Payment ID
-                </a></li>
-
-                <li><a  style="display:none;" class="hot_link" data-page="support.html" href="#support">
-                    <i class="fa fa-comments"></i> Help
-                </a></li>
-
-            </ul>
-
-
-            <div class="nav col-md-5 navbar-right explorer-search">
-                <div class="input-group">
-		<input class="form-control" placeholder="Search by Block, Transaction Hash, or PaymentID" id="txt_search" style="height: 40.5px;">
-                    <span class="input-group-btn"><button class="btn btn-default" type="button" id="btn_search">
-                        <span><i class="fa fa-search"></i> Search</span>
-                    </button></span>
-                </div>
-            </div>
-
+      </div>
+</a>
+      <!-- slim-header-left -->
+      <div class="slim-header-right headerSearch">
+        <div id="stats_updated" style="display: none;">
+          <i class="fa fa-bolt"></i>
         </div>
+        <!-- search-box -->
+        <div class="search-box">
+          <input type="text" id="txt_search" class="form-control" tplaceholder="searchHint"
+            placeholder="Search by block height / hash, transaction hash, payment id">
+          <button id="btn_search" class="btn btn-primary"style="background-color:#fff !important;">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+        <!-- language selector -->
+        <div id="langSelector">
+          <select id="newLang" class="form-control form-control-sm select2">
+            <option value="en" selected="selected">English</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
+            <option value="it">Italiano</option>
+            <option value="de">Deutsch</option>
+            <option value="ru">Русский</option>
+            <option value="ca">Català</option>
+            <option value="ko">한국어</option>
+            <option value="zh-CN">简体中文</option>
+          </select>
+        </div>
+      </div>
+      <!-- header-right -->
     </div>
-</div>
+    <!-- container -->
+  </div>
+  <!-- slim-header -->
 
-<script>
-    $('#btn_search').click(function(e) {
+  <div class="slim-navbar">
+    <div class="container">
+      <ul class="nav" id="mainNavigation">
+        <li class="nav-item active" style="flex:1 1 0;">
+          <a class="nav-link hot_link" style="color:aliceblue;"data-page="dashboard.html" href="#">
+            <i class="icon ion-ios-home-outline"></i>
+            <span tkey="dashboard">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item" style="flex:1 1 0;">
+          <a class="nav-link hot_link" data-page="homeone.html" href="#explorer">
+            <i class="icon ion-ios-filing-outline"></i>
+            <span tkey="explorer">Ledger</span>
+          </a>
+        </li>
+        <li class="nav-item" style="flex:1 1 0;">
+          <a class="nav-link hot_link nav-link-last" data-page="cold.html" href="#coldInfo">
+            <i class="icon ion-erlenmeyer-flask"style="font-size:large;"></i>
+            <span tkey="miningPools">COLD</span>
+          </a>
+        </li>
+       <li class="nav-item" style="flex:1 1 0;">
+          <a class="nav-link hot_link nav-link-last" data-page="infra.html" href="#infra">
+            <i class="fa fa-rebel" style="font-size: 18px;margin-right: 5px;color:#00c4ff;"></i>
+            <span tkey="nodes">Elder Nodes</span>
+           </a>
+        </li>
+        <li class="nav-item" style="flex:1 1 0;">
+          <a class="nav-link hot_link nav-link-last" data-page="digm.html" href="#digminfo">
+            <i class="fa fa-music" style="font-size: 20px;margin-right: 5px;color:#00c4ff;"></i>
+            <span tkey="digm">DIGM</span>
+          </a>
+        </li>
+        <li class="nav-item with-sub" style="flex:1 1 0;">
+          <a class="nav-link" style=""href="#" data-toggle="dropdown" id="toolsNavItem">
+            <i class="icon ion-ios-analytics-outline"></i>
+            <span tkey="resources">Tools</span>
+          </a>
+          <div class="sub-item">
+            <ul>
+              <li>
+                <a class="hot_link" data-page="chktxn.html" href="#txViewer">
+                  <i class="fa ion-ios-book-outline icon-dropdown"></i><span tkey="txViewer">Verify TXN</span>
+                </a>
+              </li>
+              <li>
+                <a class="hot_link" data-page="check_funds.html" href="#check_funds">
+                  <i class="fa ion-android-checkbox-outline icon-dropdown"></i><span tkey="bp">Balance Proof</span>
+                </a>
+              </li>
+              <li>
+                <a class="hot_link" data-page="paperwallet.html" href="#paperwallet">
+                  <i class="fa ion-ios-book-outline icon-dropdown"></i><span tkey="infra">Paper Wallet</span>
+                </a>
+              </li>
+              <li>
+                <a class="hot_link" data-page="api.html" href="#api">
+                  <i class="fa fa-gears icon-dropdown"></i><span tkey="api">API</span>
+                </a>
+              </li>
+              <li>
+                <a class="hot_link" href="http://testnet.fango.money">
+                  <i class="fa fa-gears icon-dropdown"></i><span>TESTNET</span>
+                </a>
+              </li>
+              <li>
+            </ul>
+          </div><!-- dropdown-menu -->
+        </li>
 
-        var text = document.getElementById('txt_search').value;
+        <li class="nav-item" style="display:none;">
+          <a class="hot_link" data-page="blockchain_block.html" href="#blockchain_block">
+            <i class="fa fa-cubes"></i>
+            Block</a>
+        </li>
+        <li class="" style="display:none;">
+          <a class="hot_link" data-page="blockchain_transaction.html" href="#blockchain_transaction">
+            <i class="fa fa-cubes"></i>
+            Transaction</a>
+        </li>
+        <li class="nav-item" style="display:none;">
+          <a class="hot_link" data-page="blockchain_payment_id.html" href="#blockchain_payment_id">
+            <i class="fa fa-cubes"></i>
+            Transaction by Payment ID</a>
+        </li>
+      </ul>
+    </div>
+    <!-- container -->
+  </div>
+  <!-- slim-navbar -->
 
-        function GetSearchBlockbyHeight(){
-            var block, xhrGetSearchBlockbyHeight;
-            if (xhrGetSearchBlockbyHeight) xhrGetSearchBlockbyHeight.abort();
+  <div id="content">
+    <div class="container">
+      <div id="page"></div>
+      <p id="loading" class="text-center">
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+      </p>
+    </div>
+  </div>
 
-            xhrGetSearchBlockbyHeight = $.ajax({
+  <div class="slim-footer" id="explorerFooter">
+    <div class="container">
+      <p>Contribute to this project at<a href="https://github.com/fandomgold/fango-explorer"> <i class="fa fa-github"></i>  Fandom Gold Society</a></p>
+    </div>
+    <!-- container -->
+  </div>
+  <!-- slim-footer -->
+
+  <!-- general modal error dialog -->
+  <div id="errorDialog" class="modal fade" style="display: none;" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content tx-size-sm">
+        <div class="modal-body tx-center pd-y-20 pd-x-20">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">×</span></button>
+          <i class="fa fa-exclamation-triangle tx-100 tx-danger lh-1 mg-t-20 d-inline-block"></i>
+          <h4 class="tx-danger mg-b-20">Error searching!</h4>
+          <p class="mg-b-20 mg-x-20" id="errorReason"></p>
+          <button type="button" class="btn btn-danger pd-x-25" data-dismiss="modal" aria-label="Close">Continue</button>
+        </div>
+        <!-- modal-body -->
+      </div>
+      <!-- modal-content -->
+    </div>
+    <!-- modal-dialog -->
+  </div>
+
+  <script src="lang/languages.js"></script>
+  <script>
+    function searchByHashOrHeight(value) {
+      function GetSearchBlockbyHeight() {
+
+        var block, xhrGetSearchBlockbyHeight;
+        if (xhrGetSearchBlockbyHeight) xhrGetSearchBlockbyHeight.abort();
+
+        xhrGetSearchBlockbyHeight = $.ajax({
+          url: api + '/json_rpc',
+          method: "POST",
+          data: JSON.stringify({
+            jsonrpc: "2.0",
+            id: "blockbyheight",
+            method: "getblockheaderbyheight",
+            params: {
+              height: parseInt(value)
+            }
+          }),
+          dataType: 'json',
+          cache: 'false',
+          success: function (data) {
+            if (data.result) {
+              block = data.result.block_header;
+              window.location.href = getBlockchainUrl(block.hash);
+            } else if (data.error) {
+              wrongSearchAlert();
+            }
+          }
+        });
+      }
+
+      function GetSearchBlock() {
+        var block, xhrGetSearchBlock;
+        if (xhrGetSearchBlock) xhrGetSearchBlock.abort();
+        xhrGetSearchBlock = $.ajax({
+          url: api + '/json_rpc',
+          method: "POST",
+          data: JSON.stringify({
+            jsonrpc: "2.0",
+            id: "GetSearchBlock",
+            method: "f_block_json",
+            params: {
+              hash: value
+            }
+          }),
+          dataType: 'json',
+          cache: 'false',
+          success: function (data) {
+            if (data.result) {
+              block = data.result.block;
+              sessionStorage.setItem('searchBlock', JSON.stringify(block));
+              window.location.href = getBlockchainUrl(block.hash);
+            } else if (data.error) {
+              $.ajax({
                 url: api + '/json_rpc',
                 method: "POST",
                 data: JSON.stringify({
-                    jsonrpc:"2.0",
-                    id: "blockbyheight",
-                    method:"getblockheaderbyheight",
-                    params: {
-                        height: parseInt(text)
-                    }
+                  jsonrpc: "2.0",
+                  id: "test",
+                  method: "f_transaction_json",
+                  params: {
+                    hash: value
+                  }
                 }),
                 dataType: 'json',
                 cache: 'false',
-                success: function(data){
-                    if(data.result){
-                        block = data.result.block_header;
-                        window.location.href = getBlockchainUrl(block.hash);
-                    } else if(data.error) {
-                        wrongSearchAlert();
-                    }
+                success: function (data) {
+                  if (data.result) {
+                    sessionStorage.setItem('searchTransaction', JSON.stringify(data.result));
+                    window.location.href = getFinalUrl(transactionExplorer.replace('{id}', value));
+                  } else if (data.error) {
+                    xhrGetTsx = $.ajax({
+                      url: api + '/json_rpc',
+                      method: "POST",
+                      data: JSON.stringify({
+                        jsonrpc: "2.0",
+                        id: "test",
+                        method: "k_transactions_by_payment_id",
+                        params: {
+                          payment_id: value
+                        }
+                      }),
+                      dataType: 'json',
+                      cache: 'false',
+                      success: function (data) {
+                        if (data.result) {
+                          txsByPaymentId = data.result.transactions;
+                          sessionStorage.setItem('txsByPaymentId', JSON.stringify(txsByPaymentId));
+                          window.location.href = getFinalUrl(paymentIdExplorer.replace('{id}', value));
+                        } else if (data.error) {
+                          $("#errorReason").html("We could not find anything, check if the data is correct.");
+                          $("#errorDialog").modal();
+                        }
+                      }
+                    });
+
+                  }
                 }
-            });
-        }
+              });
+            }
+          }
+        });
+      }
 
-        function GetSearchBlock(){
-            var block, xhrGetSearchBlock;
-            if (xhrGetSearchBlock) xhrGetSearchBlock.abort();
+      if (value.length < 64) {
+        GetSearchBlockbyHeight();
+      } else if (value.length == 64) {
+        GetSearchBlock();
+      } else {
+        wrongSearchAlert();
+      }
+    }
 
-            xhrGetSearchBlock = $.ajax({
-                url: api + '/json_rpc',
-                method: "POST",
-                data: JSON.stringify({
-                    jsonrpc:"2.0",
-                    id: "GetSearchBlock",
-                    method:"f_block_json",
-                    params: {
-                        hash: text
-                    }
-                }),
-                dataType: 'json',
-                cache: 'false',
-                success: function(data){
-                    if(data.result){
-                        block = data.result.block;
-                        sessionStorage.setItem('searchBlock', JSON.stringify(block));
-                        window.location.href = getBlockchainUrl(block.hash);
-                    } else if(data.error) {
-                        $.ajax({
-                            url: api + '/json_rpc',
-                            method: "POST",
-                            data: JSON.stringify({
-                                jsonrpc:"2.0",
-                                id: "test",
-                                method:"f_transaction_json",
-                                params: {
-                                    hash: text
-                                }
-                            }),
-                            dataType: 'json',
-                            cache: 'false',
-                            success: function(data){
-                                if(data.result){
-                                    sessionStorage.setItem('searchTransaction', JSON.stringify(data.result));
-                                    window.location.href = transactionExplorer.replace('{id}', text);
-                                } else if(data.error) {
-                                    xhrGetTsx =  $.ajax({
-                                        url: api + '/json_rpc',
-                                        method: "POST",
-                                        data: JSON.stringify({
-                                            jsonrpc:"2.0",
-                                            id: "test",
-                                            method:"k_transactions_by_payment_id",
-                                            params: {
-                                                payment_id: text
-                                            }
-                                        }),
-                                        dataType: 'json',
-                                        cache: 'false',
-                                        success: function(data){
-                                            if(data.result){
-                                                txsByPaymentId = data.result.transactions;
-                                                sessionStorage.setItem('txsByPaymentId', JSON.stringify(txsByPaymentId));
-                                                window.location.href = paymentIdExplorer.replace('{id}', text);
-                                            } else if(data.error) {
-                                                $('#page').after(
-                                                    '<div class="alert alert-warning alert-dismissable fade in" style="position: fixed; right: 50px; top: 50px;">'+
-                                                    '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">' +
-                                                        '&times;' +
-                                                    '</button>' +
-                                                    'We could not find anything.' +
-                                                    '</div>');
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        }
+    // make sure index.html is in the URL for the explorer
+    if (window.location.href.indexOf("index.html") == -1) {
+      window.location.href = "/index.html";
+    } else if (GetURLParameter("hash")) {
+      searchByHashOrHeight(GetURLParameter("hash").trim());
+    }
 
-        if ( text.length < 64 ) {
-            GetSearchBlockbyHeight();
-        } else if ( text.length == 64 ) {
-            GetSearchBlock();
-        } else {
-            wrongSearchAlert();
-        }
+    renderLangSelector();
+    loadTranslations();
 
-        e.preventDefault();
-
+    $('#btn_search').click(function (e) {
+      searchByHashOrHeight(document.getElementById('txt_search').value.trim());
+      e.preventDefault();
     });
 
     function wrongSearchAlert() {
-        $('#page').after(
-            '<div class="alert alert-danger alert-dismissable fade in" style="position: fixed; right: 50px; top: 50px;">'+
-            '<button type="button" class="close" ' +
-            'data-dismiss="alert" aria-hidden="true">' +
-            '&times;' +
-            '</button>' +
-            '<strong>Wrong search query!</strong><br /> Please enter block height or hash, transaction hash, or payment id.' +
-            '</div>');
+      $("#errorReason").html("Wrong search query!</strong><br /> Please enter block height or hash, transaction hash, or payment id.");
+      $("#errorDialog").modal();
     }
 
-    $('#txt_search').keyup(function(e){
-        if(e.keyCode === 13)
-            $('#btn_search').click();
+    $('#txt_search').keyup(function (e) {
+      if (e.keyCode === 13)
+        $('#btn_search').click();
+    }
+    );
+  </script>
+
+  <script type="text/javascript">
+    jQuery(function ($) {
+      $(document).ready(function () {
+        $(window).scroll(function () {
+          if ($(this).scrollTop() > 500) {
+            $('.scrollup').fadeIn();
+          } else {
+            $('.scrollup').fadeOut();
+          }
+        });
+
+        $('.scrollup').click(function () {
+          $("html, body").animate({
+            scrollTop: 0
+          }, 600);
+          return false;
+        });
+
+        $('.scrollup').css('opacity', '0.3');
+
+        $('.scrollup').hover(function () {
+          $(this)
+            .stop()
+            .animate({
+              opacity: 0.9
+            }, 400);
+        }, function () {
+          $(this)
+            .stop()
+            .animate({
+              opacity: 0.3
+            }, 400);
+        });
+      });
     });
-</script>
 
-<div id="content">
-    <div class="container">
+    $('#mainNavigation .nav-link').click(function () {
+      var newURL = window.location.href.split('?').map((url, i) => !i ? url : url.split('&').filter(p => !p.startsWith('hash' + '=')).join('&')).join('?');
 
-        <div id="page"></div>
+      if ((newURL.lastIndexOf('?') == (newURL.lastIndexOf('#') - 1)) || (newURL.substring(newURL.length - 1) == "?")) {
+        newURL = newURL.replace("?", "");
+      }
 
-        <p id="loading" class="text-center"><i class="fa fa-spinner fa-pulse" style="font-size:48px;color:#0208f5"></i></p>
+      if (newURL.search("#") > -1) {
+        newURL = newURL.substring(0, newURL.lastIndexOf('#'));
+      }
 
-    </div>
-</div>
+      if (($(this).attr("href") == "") || ($(this).attr("href") == "#")) {
+        window.location.href = newURL;
+      } else {
+        window.location.href = newURL + $(this).attr("href");
+      }
 
-<footer>
-    <div class="container">
-        <div class="row">
-            
-
-            <div class="col-lg-4 col-md-4 col-sm-6" style="margin-top: 2%;" align="left">
-                <p>
-                    <small><font face="Caudex">© 2019 <strong>FANDOM GOLD Project</strong></font>
-                    </small>
-                </p>
-            </div>
-		<div class="col-lg-12 col-md-12 col-sm-12">
-		
-            <div class="col-lg-4 col-md-4 col-sm-6" style="padding-bottom: 0.1%;color: #0f00ff;margin-top: 2%;" type="disc" align="left">
-  
-	<div class="drglinks"style="color:silver;">
-        
-		<li><a href="https://fandom.gold">fandom.gold</a></li>
-    </div>
-           </div>
-			<div class="col-lg-4 col-md-4 col-sm-6" style="margin-top: 2%;"><p align="center">
-                    <small>
-                        <!-- This copyright should be left intact -->
-                        <font size="2px" color="#C0C0C0">Powered by  <a target="_blank" href="https://github.com/FandomGold/fandomgold"><font color="gold"><i class="fa fa-github"></i>  Fandom GOLD  </font></a>
-                       <br>
-                        <span class=""><font size="1px">Based on cryptonote-universal-pool</font></span> <br>
-<span><a href="https://github.com/Karbovanets/Karbowanec-Blockchain-Explorer"><font size="1px" color="#ffec00">Karbo</font><font size="1px" color="#1bb1fa">-Blockchain-Explorer</font></a></span> <br>
-                  <span><font size="1px">Open sourced under the </font><a href="http://www.gnu.org/licenses/gpl-2.0.html"><font size="1px" color="white">GPL</font></a></span>
-                 </font></small>
-                </p>
-              </div>
-		<div class="col-lg-4 col-md-4 col-sm-6">
-			<strong class="text-info">Node info</strong>
-				<ul class="text-info" style="font-size: smaller;">
-					<li>Status: <span id="node_connection" class="text-danger">Offline</span></li>
-					<li>Version: <span id="node_ver">...</span></li>
-					<li>Height: <span id="node_height">...</span></li>
-					<li>Last block: <span id="node_block">...</span></li>
-					<li>Difficulty: <span id="node_diff">...</span></li>
-					<li>Alt. blocks: <span id="node_alt">...</span></li>
-					<li>Incoming connections: <span id="node_inc">...</span></li>
-					<li>Outgoing connects: <span id="node_out">...</span></li>
-					<li>White peers: <span id="node_white">...</span></li>
-					<li>Grey peers: <span id="node_grey">...</span></li>
-				</ul>
-		</div>
-            </div>
-        </div>
-    </div>
-</footer>
-
-<a href="#" class="scrollup"><i class="fa fa-chevron-circle-up"></i></a>
-	<script type="text/javascript">
-			jQuery(function($) { $(document).ready(function() {
-				$(window).scroll(function(){
-					if ($(this).scrollTop() > 500) {
-						$('.scrollup').fadeIn();
-					} else {
-						$('.scrollup').fadeOut();
-					}
-				}); 
-		
-				$('.scrollup').click(function(){
-					$("html, body").animate({ scrollTop: 0 }, 600);
-					return false;
-				});
-
-				$('.scrollup').css('opacity','0.3');
-		 
-				$('.scrollup').hover(function(){
-					$(this).stop().animate({opacity: 0.9}, 400);
-				 }, function(){
-					$(this).stop().animate({opacity: 0.3}, 400);
-				});  
-					
-			});});
-	</script>	
+      return false;
+    });
+  </script>
 </body>
+
 </html>

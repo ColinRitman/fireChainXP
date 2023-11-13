@@ -1,6 +1,6 @@
 <?php 
 $data_string = '{"jsonrpc":"2.0","id":"test","method":"getlastblockheader","params":" "}';
-$ch = curl_init('http://zirtysperzys.info:18180/json_rpc');
+$ch = curl_init('https://fango.money:18180/json_rpc');
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
 curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -15,3 +15,4 @@ $reward  = number_format($rewardRaw / 10000000, 7, ".", "");
 print_r($reward);
 curl_close($ch);
 ?>
+
