@@ -271,7 +271,7 @@
      
 
       // get market data
-      $.getJSON("https://api.coingecko.com/api/v3/coins/fango?sparkline=true", function (data) {
+      $.getJSON("https://graphsv2.coinpaprika.com/currency/data/xfg-fango/7d/?quote=usd", function (data) {
         USDperCCX = data.market_data.current_price.usd;
         $("#CCXToUSD").html("$ " + localizeNumber(data.market_data.current_price.usd.toFixed(4)));
         $("#CCXToBTC").html(data.market_data.current_price.btc.toFixed(8));
