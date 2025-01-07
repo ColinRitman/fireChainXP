@@ -1784,6 +1784,7 @@ textarea.custom-file-input.parsley-error:focus ~ .custom-file-label {
   transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out; }
   .btn:hover, .sp-container button:hover, .btn:focus, .sp-container button:focus {
     text-decoration: none;
+    background-image: url(/css/themes/gradi.gif);
     background-color: #fccb00;
     color: black !important; }
   .btn:focus, .sp-container button:focus, .btn.focus, .sp-container button.focus {
