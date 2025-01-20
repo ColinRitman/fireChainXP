@@ -272,10 +272,10 @@
 
       // get market data
       $.getJSON("https://graphsv2.coinpaprika.com/currency/data/xfg-fango/7d/?quote=usd", function (data) {
-        USDperCCX = data.market_data.current_price.usd;
-        $("#CCXToUSD").html("$ " + localizeNumber(data.market_data.current_price.usd.toFixed(4)));
-        $("#CCXToBTC").html(data.market_data.current_price.btc.toFixed(8));
-        $("#dailyVolume").html("$ " + localizeNumber(data.market_data.total_volume.usd.toFixed(0)));
+        USDperCCX = data.market_data.price.usd;
+        $("#CCXToUSD").html("$ " + localizeNumber(data.market_data.price.usd.toFixed(4)));
+        $("#CCXToBTC").html(data.market_data.btc.toFixed(8));
+        $("#dailyVolume").html("$ " + localizeNumber(data.market_data.volume.usd.toFixed(0)));
 
         if (marketPriceAreaChart) {
           marketPriceAreaChart.destroy();
